@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bankovní Integrační Testování - Tréninková Databáze</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #2a5298;
+            margin-bottom: 5px;
+        }
+
+        .controls {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .filter-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .filter-group label {
+            font-weight: 600;
+            color: #2a5298;
+        }
+
+        select, input {
+            padding: 8px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #2a5298;
+        }
+
+        .question-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid #2a5298;
+            transition: transform 0.2s ease;
+        }
+
+        .question-card:hover {
+            transform: translateX(5px);
+        }
+
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .question-meta {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .difficulty {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .difficulty.easy { background: #4ade80; color: white; }
+        .difficulty.medium { background: #f59e0b; color: white; }
+        .difficulty.hard { background: #ef4444; color: white; }
+
+        .question-text {
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        .answer-section {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+
+        .toggle-answer {
+            background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: transform 0.2s ease;
+        }
+
+        .toggle-answer:hover {
+            transform: scale(1.05);
+        }
+
+        .answer {
+            display: none;
+            margin-top: 10px;
+            line-height: 1.6;
+        }
+
+        .answer.show {
+            display: block;
+        }
+
+        .no-questions {
+            text-align: center;
+            color: white;
+            font-size: 18px;
+            margin-top: 50px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            border-radius: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .filter-section {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .question-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .question-meta {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏦 Bankovní Integrační Testování</h1>
+            <p>Kompletní tréninková databáze pro přípravu na pozici Integračního Testera</p>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalQuestions">45</div>
+                <div>Celkový počet otázek</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="cardQuestions">15</div>
+                <div>Platební karty</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="integrityQuestions">15</div>
+                <div>Integrita plateb</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="subsidiaryQuestions">15</div>
+                <div>Dceřiné společnosti</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="filter-section">
+                <div class="filter-group">
+                    <label for="categoryFilter">Oblast:</label>
+                    <select id="categoryFilter">
+                        <option value="all">Všechny oblasti</option>
+                        <option value="cards">Platební karty</option>
+                        <option value="integrity">Integrita plateb</option>
+                        <option value="subsidiary">Dceřiné společnosti</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="difficultyFilter">Obtížnost:</label>
+                    <select id="difficultyFilter">
+                        <option value="all">Všechny úrovně</option>
+                        <option value="easy">Snadné</option>
+                        <option value="medium">Střední</option>
+                        <option value="hard">Těžké</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="searchFilter">Hledat:</label>
+                    <input type="text" id="searchFilter" placeholder="Zadej klíčová slova...">
+                </div>
+            </div>
+        </div>
+
+        <div id="questionsContainer">
+            <!-- Questions will be populated by JavaScript -->
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            // PLATEBNÍ KARTY
+            {
+                id: 1,
+                category: "cards",
+                difficulty: "easy",
+                question: "Co je to PCI DSS a proč je důležité pro testování platebních karet?",
+                answer: "PCI DSS (Payment Card Industry Data Security Standard) je bezpečnostní standard pro organizace, které zpracovávají platební karty. Při testování musíme zajistit, že všechny systémy splňují PCI DSS požadavky - šifrování dat, bezpečné ukládání, omezený přístup k datům držitelů karet.",
+                tags: ["PCI DSS", "Bezpečnost", "Compliance"]
+            },
+            {
+                id: 2,
+                category: "cards",
+                difficulty: "medium",
+                question: "Jak testujete integraci mezi autorizačním systémem a procesorem karet při online platbě?",
+                answer: "Testování zahrnuje: 1) Ověření správného formátu zpráv (ISO 8583), 2) Test timeout scenářů, 3) Ověření response kódů, 4) Test reversal transakcí při chybách, 5) Validace šifrování PIN kódů, 6) Test různých typů karet (Visa, MasterCard), 7) Monitoring logů pro chyby komunikace.",
+                tags: ["Autorizace", "ISO 8583", "Online platby"]
+            },
+            {
+                id: 3,
+                category: "cards",
+                difficulty: "hard",
+                question: "Popište testování 3D Secure autentifikace v e-commerce prostředí a možné chybové stavy.",
+                answer: "Testování 3D Secure: 1) Enrollment check (kontrola podpory 3DS), 2) Authentication request/response, 3) Test všech výsledků (Y/N/U/A), 4) Fallback scénáře při nedostupnosti ACS, 5) Test timeout scenářů, 6) Validace digitálních certifikátů, 7) Test různých verzí (3DS 1.0/2.0), 8) Browser compatibility testing, 9) Mobile app integration testing.",
+                tags: ["3D Secure", "E-commerce", "Autentifikace"]
+            },
+            {
+                id: 4,
+                category: "cards",
+                difficulty: "easy",
+                question: "Jaké jsou hlavní typy testů pro ATM transakce?",
+                answer: "Hlavní typy testů: 1) Výběr hotovosti, 2) Dotaz na zůstatek, 3) PIN změna, 4) Transfer mezi účty, 5) Test offline/online režimu, 6) Test různých denominací bankovek, 7) Test chybových stavů (nedostatek prostředků, nesprávný PIN), 8) Hardware testy (čtečka karet, dispensér).",
+                tags: ["ATM", "Hardware testování", "PIN operace"]
+            },
+            {
+                id: 5,
+                category: "cards",
+                difficulty: "medium",
+                question: "Jak testujete tokenizaci platebních karet pro mobilní platby (Apple Pay, Google Pay)?",
+                answer: "Testování tokenizace: 1) Enrollment proces (přidání karty do wallet), 2) Token provisioning, 3) Token aktivace, 4) Platba s tokenem, 5) Token lifecycle (aktivace/deaktivace/smazání), 6) Test různých device typů, 7) Biometrická autentifikace, 8) Network token vs device token, 9) Backend validace tokenů.",
+                tags: ["Tokenizace", "Apple Pay", "Google Pay", "Mobile platby"]
+            },
+            {
+                id: 6,
+                category: "cards",
+                difficulty: "hard",
+                question: "Popište komplexní testování EMV chip karet včetně offline autorizace.",
+                answer: "EMV testování: 1) Card authentication (SDA/DDA/CDA), 2) Cardholder verification (PIN/signature/biometric), 3) Transaction authorization (online/offline), 4) Application selection a prioritization, 5) Terminal risk management, 6) Issuer authentication, 7) Test všech EMV tagů, 8) Fallback na magnetic stripe, 9) Contact/contactless režimy, 10) Script processing.",
+                tags: ["EMV", "Chip karty", "Offline autorizace", "Contactless"]
+            },
+            {
+                id: 7,
+                category: "cards",
+                difficulty: "easy",
+                question: "Jaké jsou klíčové response kódy při testování autorizace platebních karet?",
+                answer: "Klíčové response kódy: 00 (Approved), 05 (Declined), 14 (Invalid card), 41 (Lost card), 43 (Stolen card), 51 (Insufficient funds), 54 (Expired card), 55 (Incorrect PIN), 57 (Transaction not allowed), 61 (Exceeds limit), 91 (Issuer unavailable), 96 (System malfunction).",
+                tags: ["Response kódy", "Autorizace", "Error handling"]
+            },
+            {
+                id: 8,
+                category: "cards",
+                difficulty: "medium",
+                question: "Jak testujete batch settlement proces pro platební karty?",
+                answer: "Settlement testování: 1) Batch creation a validation, 2) Transaction reconciliation, 3) Fee calculation, 4) Clearing messages, 5) Settlement reports, 6) Exception handling, 7) Batch balancing, 8) Chargeback processing, 9) Multi-currency settlements, 10) Timing windows (cut-off times).",
+                tags: ["Settlement", "Batch processing", "Reconciliation"]
+            },
+            {
+                id: 9,
+                category: "cards",
+                difficulty: "hard",
+                question: "Popište testování fraud detection systému pro platební karty.",
+                answer: "Fraud detection testing: 1) Rules engine testing (velocity checks, location anomalies), 2) Machine learning model validation, 3) Real-time scoring, 4) False positive/negative rates, 5) Alert generation, 6) Case management workflow, 7) Integration s external fraud services, 8) Performance testing (latency < 100ms), 9) A/B testing nových pravidel.",
+                tags: ["Fraud detection", "Machine learning", "Real-time processing"]
+            },
+            {
+                id: 10,
+                category: "cards",
+                difficulty: "medium",
+                question: "Jak testujete recurring payments (opakované platby) s platebními kartami?",
+                answer: "Recurring payments testování: 1) Initial authorization, 2) Subsequent payments bez CVV, 3) Token management, 4) Expiry date updates, 5) Failed payment handling, 6) Customer notification, 7) Retry logic, 8) Cancellation process, 9) Proration calculations, 10) Compliance s merchant rules.",
+                tags: ["Recurring payments", "Subscription", "Token management"]
+            },
+            {
+                id: 11,
+                category: "cards",
+                difficulty: "easy",
+                question: "Jaké jsou základní kontroly při testování POS terminálů?",
+                answer: "POS testování: 1) Card reader funkčnost, 2) PIN pad testování, 3) Receipt printing, 4) Network connectivity, 5) Transaction processing, 6) Display functionality, 7) Keyboard input, 8) Software updates, 9) Security features, 10) Battery life (u mobilních).",
+                tags: ["POS", "Hardware", "Terminal testing"]
+            },
+            {
+                id: 12,
+                category: "cards",
+                difficulty: "medium",
+                question: "Jak testujete chargeback processing pro platební karty?",
+                answer: "Chargeback testování: 1) Dispute initiation, 2) Reason code validation, 3) Documentation requirements, 4) Time limits, 5) Representment process, 6) Arbitration cases, 7) Liability shifts, 8) Notification workflows, 9) Financial reconciliation, 10) Reporting a analytics.",
+                tags: ["Chargeback", "Dispute management", "Reason codes"]
+            },
+            {
+                id: 13,
+                category: "cards",
+                difficulty: "hard",
+                question: "Popište testování multi-party card processing (issuer, acquirer, processor).",
+                answer: "Multi-party testování: 1) Message routing mezi stranami, 2) Fee allocation, 3) Settlement mezi parties, 4) Compliance každé strany, 5) SLA monitoring, 6) Dispute resolution, 7) Data integrity napříč systémy, 8) Redundancy a failover, 9) Audit trails, 10) Regulatory reporting.",
+                tags: ["Multi-party", "Issuer", "Acquirer", "Settlement"]
+            },
+            {
+                id: 14,
+                category: "cards",
+                difficulty: "medium",
+                question: "Jak testujete contactless payments (NFC) na různých zařízeních?",
+                answer: "Contactless testování: 1) NFC communication, 2) Transaction limits, 3) CVM (Cardholder Verification Method), 4) Speed testování (<500ms), 5) Range testing, 6) Multiple cards scenario, 7) Device compatibility, 8) EMV contactless flows, 9) Mobile wallet integration, 10) Security validace.",
+                tags: ["Contactless", "NFC", "EMV contactless", "CVM"]
+            },
+            {
+                id: 15,
+                category: "cards",
+                difficulty: "easy",
+                question: "Jaké jsou nejčastější integration problémy při testování card processing?",
+                answer: "Časté problémy: 1) Network timeouts, 2) Message format errors, 3) Certificate expiry, 4) Load balancing issues, 5) Database connectivity, 6) Third-party service outages, 7) Configuration mismatches, 8) Version compatibility, 9) Security policy conflicts, 10) Performance degradation.",
+                tags: ["Integration issues", "Network", "Configuration"]
+            },
+
+            // INTEGRITA PLATEB
+            {
+                id: 16,
+                category: "integrity",
+                difficulty: "easy",
+                question: "Co je to SWIFT a jak testujete integraci se SWIFT sítí?",
+                answer: "SWIFT (Society for Worldwide Interbank Financial Telecommunication) je globální síť pro bankovní zprávy. Testování zahrnuje: 1) Message formatting (MT/MX formáty), 2) Network connectivity, 3) Security protocols (PKI), 4) Message routing, 5) Acknowledgments, 6) Error handling, 7) Compliance screening, 8) STP (Straight Through Processing).",
+                tags: ["SWIFT", "MT messages", "MX messages", "STP"]
+            },
+            {
+                id: 17,
+                category: "integrity",
+                difficulty: "medium",
+                question: "Jak testujete AML (Anti-Money Laundering) screening v platebním procesu?",
+                answer: "AML testování: 1) Name screening proti sanctions lists, 2) Pattern recognition (structuring, smurfing), 3) Threshold monitoring, 4) Risk scoring, 5) SAR (Suspicious Activity Reports), 6) Customer due diligence, 7) Enhanced due diligence, 8) False positive management, 9) Regulatory reporting, 10) Audit trails.",
+                tags: ["AML", "Sanctions screening", "Risk scoring", "SAR"]
+            },
+            {
+                id: 18,
+                category: "integrity",
+                difficulty: "hard",
+                question: "Popište testování real-time payment systems (instant payments) jako je SEPA Instant.",
+                answer: "Real-time payments testování: 1) 24/7 availability, 2) 10-second processing time, 3) Irrevocability checks, 4) Liquidity management, 5) Queue management při outages, 6) Proxy lookup (IBAN/mobile/email), 7) Request for Pay, 8) Fraud screening real-time, 9) Settlement finality, 10) ISO 20022 compliance.",
+                tags: ["Real-time payments", "SEPA Instant", "ISO 20022", "24/7 processing"]
+            },
+            {
+                id: 19,
+                category: "integrity",
+                difficulty: "easy",
+                question: "Jaké jsou základní kontroly při testování SEPA plateb?",
+                answer: "SEPA testování: 1) IBAN validation, 2) BIC code checks, 3) XML format validation, 4) SEPA schemes compliance, 5) Reachability checks, 6) R-transactions handling, 7) Settlement timing, 8) Fee structures, 9) SDD mandates, 10) Character set validation.",
+                tags: ["SEPA", "IBAN", "BIC", "SDD mandates"]
+            },
+            {
+                id: 20,
+                category: "integrity",
+                difficulty: "medium",
+                question: "Jak testujete correspondent banking relationships a nostro/vostro účty?",
+                answer: "Correspondent banking testování: 1) Nostro reconciliation, 2) Vostro account management, 3) Cover payment instructions, 4) Intermediary bank handling, 5) Currency conversion, 6) Fee deduction logic, 7) Due diligence compliance, 8) Reporting requirements, 9) Limit monitoring, 10) Exception handling.",
+                tags: ["Correspondent banking", "Nostro", "Vostro", "Cover payments"]
+            },
+            {
+                id: 21,
+                category: "integrity",
+                difficulty: "hard",
+                question: "Popište testování cross-border payment compliance (FATF, sanctions).",
+                answer: "Cross-border compliance testování: 1) FATF Travel Rule, 2) Sanctions screening (OFAC, EU, UN), 3) Beneficiary screening, 4) Country risk assessment, 5) Correspondent bank due diligence, 6) PEP (Politically Exposed Persons) checks, 7) Transaction monitoring, 8) Regulatory reporting, 9) Record keeping, 10) Know Your Customer's Customer (KYCC).",
+                tags: ["Cross-border", "FATF", "Sanctions", "PEP screening"]
+            },
+            {
+                id: 22,
+                category: "integrity",
+                difficulty: "easy",
+                question: "Jaké jsou klíčové elementy při testování payment validation rules?",
+                answer: "Payment validation: 1) Account number format, 2) Amount limits, 3) Currency validation, 4) Business day checks, 5) Cut-off times, 6) Duplicate detection, 7) Beneficiary validation, 8) Purpose code checks, 9) Regulatory limits, 10) Field mandatory checks.",
+                tags: ["Validation rules", "Business rules", "Field validation"]
+            },
+            {
+                id: 23,
+                category: "integrity",
+                difficulty: "medium",
+                question: "Jak testujete payment repair a exception handling procesy?",
+                answer: "Exception handling testování: 1) Automated repair rules, 2) Manual intervention workflows, 3) Exception queues, 4) SLA monitoring, 5) Escalation procedures, 6) Data correction capabilities, 7) Audit trails, 8) Retry mechanisms, 9) Business user interfaces, 10) Reporting dashboards.",
+                tags: ["Exception handling", "Payment repair", "Workflows", "SLA"]
+            },
+            {
+                id: 24,
+                category: "integrity",
+                difficulty: "hard",
+                question: "Popište testování liquidity management v payment processing.",
+                answer: "Liquidity management testování: 1) Intraday liquidity monitoring, 2) Funding source optimization, 3) Payment prioritization, 4) Queue management, 5) Gridlock detection, 6) Bilateral/multilateral netting, 7) Central bank facilities usage, 8) Stress testing, 9) Regulatory reporting (LCR, NSFR), 10) Real-time alerts.",
+                tags: ["Liquidity management", "Netting", "Central bank", "Stress testing"]
+            },
+            {
+                id: 25,
+                category: "integrity",
+                difficulty: "medium",
+                question: "Jak testujete message transformation mezi různými payment formáty?",
+                answer: "Message transformation testování: 1) Field mapping validation, 2) Data type conversions, 3) Character encoding, 4) Mandatory field population, 5) Business rule application, 6) Error handling, 7) Enrichment processes, 8) Version compatibility, 9) Performance testing, 10) Data integrity checks.",
+                tags: ["Message transformation", "Field mapping", "Data conversion"]
+            },
+            {
+                id: 26,
+                category: "integrity",
+                difficulty: "easy",
+                question: "Jaké jsou nejčastější chyby při integraci payment systems?",
+                answer: "Časté integration chyby: 1) Message format errors, 2) Timeout configurations, 3) Certificate management, 4) Sequence number handling, 5) Duplicate message processing, 6) Error code mapping, 7) Reconciliation gaps, 8) Performance bottlenecks, 9) Security protocol mismatches, 10) Configuration drift.",
+                tags: ["Integration errors", "Message handling", "Configuration"]
+            },
+            {
+                id: 27,
+                category: "integrity",
+                difficulty: "medium",
+                question: "Jak testujete payment status tracking a notifications?",
+                answer: "Status tracking testování: 1) Real-time status updates, 2) Event-driven architecture, 3) Callback mechanisms, 4) Push notifications, 5) Status inquiry APIs, 6) Historical tracking, 7) Multi-channel notifications, 8) Error notifications, 9) SLA adherence, 10) Customer communication.",
+                tags: ["Status tracking", "Notifications", "APIs", "Event-driven"]
+            },
+            {
+                id: 28,
+                category: "integrity",
+                difficulty: "hard",
+                question: "Popište testování payment orchestration across multiple systems.",
+                answer: "Payment orchestration testování: 1) Multi-system coordination, 2) Transaction state management, 3) Rollback scenarios, 4) Compensating transactions, 5) Saga pattern implementation, 6) Distributed locking, 7) Event sourcing, 8) Consistency models, 9) Resilience patterns, 10) Performance optimization.",
+                tags: ["Orchestration", "State management", "Saga pattern", "Distributed systems"]
+            },
+            {
+                id: 29,
+                category: "integrity",
+                difficulty: "medium",
+                question: "Jak testujete regulatory reporting pro payment integrity?",
+                answer: "Regulatory reporting testování: 1) Data completeness checks, 2) Reporting templates, 3) Submission deadlines, 4) Data quality rules, 5) Reconciliation s transaction data, 6) Historical data retention, 7) Amendment capabilities, 8) Multi-jurisdiction compliance, 9) Audit trails, 10) Automated validation.",
+                tags: ["Regulatory reporting", "Data quality", "Compliance", "Audit trails"]
+            },
+            {
+                id: 30,
+                category: "integrity",
+                difficulty: "easy",
+                question: "Jaké jsou základní security testy pro payment integrity?",
+                answer: "Security testování: 1) Data encryption at rest/transit, 2) Access controls, 3) Authentication mechanisms, 4) Authorization checks, 5) Audit logging, 6) Input validation, 7) SQL injection prevention, 8) Certificate validation, 9) Network security, 10) Penetration testing.",
+                tags: ["Security", "Encryption", "Access controls", "Audit logging"]
+            },
+
+            // DCEŘINÉ SPOLEČNOSTI
+            {
+                id: 31,
+                category: "subsidiary",
+                difficulty: "easy",
+                question: "Jaké jsou hlavní výzvy při testování payment systems pro dceřiné společnosti?",
+                answer: "Hlavní výzvy: 1) Multi-currency support, 2) Local regulatory compliance, 3) Different payment methods, 4) Time zone handling, 5) Language localization, 6) Local banking partnerships, 7) Tax calculations, 8) Reporting consolidation, 9) Data residency requirements, 10) Cultural payment preferences.",
+                tags: ["Multi-currency", "Localization", "Regulatory compliance", "Time zones"]
+            },
+            {
+                id: 32,
+                category: "subsidiary",
+                difficulty: "medium",
+                question: "Jak testujete centralizovaný payment hub pro více dceřiných společností?",
+                answer: "Payment hub testování: 1) Multi-tenant architecture, 2) Company segregation, 3) Shared services, 4) Centralized configuration, 5) Local adaptations, 6) Consolidated reporting, 7) Performance scalability, 8) Disaster recovery, 9) Data privacy compliance, 10) Inter-company transfers.",
+                tags: ["Payment hub", "Multi-tenant", "Centralization", "Scalability"]
+            },
+            {
+                id: 33,
+                category: "subsidiary",
+                difficulty: "hard",
+                question: "Popište testování cross-border intercompany payments a netting.",
+                answer: "Intercompany testování: 1) Bilateral netting calculations, 2) Multi-currency netting, 3) Netting agreements, 4) Settlement optimization, 5) Transfer pricing compliance, 6) Tax implications, 7) Regulatory approvals, 8) Documentation requirements, 9) Audit trails, 10) Cash pooling integration.",
+                tags: ["Intercompany", "Netting", "Multi-currency", "Transfer pricing"]
+            },
+            {
+                id: 34,
+                category: "subsidiary",
+                difficulty: "easy",
+                question: "Jaké jsou klíčové aspekty testování local payment methods pro různé země?",
+                answer: "Local payment methods: 1) Country-specific formats, 2) Local validation rules, 3) Bank code systems, 4) Payment timing, 5) Fee structures, 6) Customer authentication, 7) Refund processes, 8) Dispute handling, 9) Regulatory compliance, 10) Integration complexity.",
+                tags: ["Local payments", "Country-specific", "Bank codes", "Validation"]
+            },
+            {
+                id: 35,
+                category: "subsidiary",
+                difficulty: "medium",
+                question: "Jak testujete currency conversion a FX rate management pro dceřiné společnosti?",
+                answer: "FX testování: 1) Rate sourcing (multiple providers), 2) Rate validation, 3) Spread calculations, 4) Hedging integration, 5) Mark-to-market, 6) Historical rates, 7) Rate cut-off times, 8) Exception handling, 9) P&L impact, 10) Regulatory reporting.",
+                tags: ["FX rates", "Currency conversion", "Hedging", "Mark-to-market"]
+            },
+            {
+                id: 36,
+                category: "subsidiary",
+                difficulty: "hard",
+                question: "Popište testování consolidated cash management pro skupinu dceřiných společností.",
+                answer: "Cash management testování: 1) Cash positioning, 2) Notional pooling, 3) Physical sweeping, 4) Interest optimization, 5) Liquidity forecasting, 6) Credit line utilization, 7) Multi-bank integration, 8) Real-time reporting, 9) Regulatory capital requirements, 10) Transfer pricing implications.",
+                tags: ["Cash management", "Cash pooling", "Liquidity", "Multi-bank"]
+            },
+            {
+                id: 37,
+                category: "subsidiary",
+                difficulty: "easy",
+                question: "Jaké jsou základní testy pro multi-entity reporting consolidation?",
+                answer: "Reporting consolidation: 1) Data aggregation, 2) Currency translation, 3) Elimination entries, 4) Inter-company reconciliation, 5) Standardized formats, 6) Timing consistency, 7) Data quality checks, 8) Audit trails, 9) Version control, 10) Regulatory requirements.",
+                tags: ["Consolidation", "Reporting", "Currency translation", "Data quality"]
+            },
+            {
+                id: 38,
+                category: "subsidiary",
+                difficulty: "medium",
+                question: "Jak testujete compliance s local banking regulations pro každou dceřinou společnost?",
+                answer: "Local compliance testování: 1) Regulatory mapping, 2) License requirements, 3) Reporting obligations, 4) Transaction limits, 5) Documentation standards, 6) Customer identification, 7) Record keeping, 8) Audit requirements, 9) Penalty calculations, 10) Change management.",
+                tags: ["Local compliance", "Banking regulations", "License requirements"]
+            },
+            {
+                id: 39,
+                category: "subsidiary",
+                difficulty: "hard",
+                question: "Popište testování global payment factory model pro dceřiné společnosti.",
+                answer: "Payment factory testování: 1) Centralized payment processing, 2) Local regulatory compliance, 3) Multi-bank connectivity, 4) Format standardization, 5) Exception handling, 6) Local execution, 7) Visibility & control, 8) Shared service costing, 9) Performance SLAs, 10) Business continuity.",
+                tags: ["Payment factory", "Centralized processing", "Multi-bank", "Standardization"]
+            },
+            {
+                id: 40,
+                category: "subsidiary",
+                difficulty: "medium",
+                question: "Jak testujete data privacy compliance (GDPR, local laws) napříč dceřinými společnostmi?",
+                answer: "Data privacy testování: 1) Data classification, 2) Consent management, 3) Data retention policies, 4) Right to be forgotten, 5) Data portability, 6) Cross-border transfers, 7) Local law compliance, 8) Breach notification, 9) Privacy by design, 10) Audit capabilities.",
+                tags: ["GDPR", "Data privacy", "Cross-border", "Consent management"]
+            },
+            {
+                id: 41,
+                category: "subsidiary",
+                difficulty: "easy",
+                question: "Jaké jsou typické integration challenges při onboarding nové dceřiné společnosti?",
+                answer: "Onboarding challenges: 1) Legacy system integration, 2) Data migration, 3) User training, 4) Local customizations, 5) Bank connectivity, 6) Regulatory approvals, 7) Testing coordination, 8) Go-live planning, 9) Rollback procedures, 10) Change management.",
+                tags: ["Onboarding", "Integration", "Data migration", "Change management"]
+            },
+            {
+                id: 42,
+                category: "subsidiary",
+                difficulty: "medium",
+                question: "Jak testujete performance payment systems při high-volume processing pro multiple subsidiaries?",
+                answer: "Performance testování: 1) Load distribution, 2) Database partitioning, 3) Caching strategies, 4) Network latency, 5) Peak load handling, 6) Failover scenarios, 7) Resource monitoring, 8) Scalability testing, 9) Bottleneck identification, 10) SLA compliance.",
+                tags: ["Performance", "Load testing", "Scalability", "SLA"]
+            },
+            {
+                id: 43,
+                category: "subsidiary",
+                difficulty: "hard",
+                question: "Popište testování disaster recovery pro distributed subsidiary payment systems.",
+                answer: "Disaster recovery testování: 1) RTO/RPO validation, 2) Data replication, 3) Failover procedures, 4) Geographic distribution, 5) Communication protocols, 6) Business continuity, 7) Regulatory notifications, 8) Recovery testing, 9) Documentation updates, 10) Lessons learned.",
+                tags: ["Disaster recovery", "RTO/RPO", "Failover", "Business continuity"]
+            },
+            {
+                id: 44,
+                category: "subsidiary",
+                difficulty: "medium",
+                question: "Jak testujete master data management pro customer data across subsidiaries?",
+                answer: "MDM testování: 1) Data standardization, 2) Golden record creation, 3) Data quality rules, 4) Duplicate detection, 5) Data lineage, 6) Synchronization processes, 7) Conflict resolution, 8) Data governance, 9) Access controls, 10) Audit trails.",
+                tags: ["MDM", "Data quality", "Golden record", "Data governance"]
+            },
+            {
+                id: 45,
+                category: "subsidiary",
+                difficulty: "easy",
+                question: "Jaké jsou key success factors při testování subsidiary payment integrations?",
+                answer: "Success factors: 1) Clear requirements, 2) Stakeholder alignment, 3) Phased approach, 4) Risk mitigation, 5) Communication plan, 6) Training programs, 7) Documentation, 8) Performance monitoring, 9) Feedback loops, 10) Continuous improvement.",
+                tags: ["Success factors", "Requirements", "Risk mitigation", "Training"]
+            }
+        ];
+
+        let filteredQuestions = questions;
+
+        function renderStats() {
+            const total = questions.length;
+            const cards = questions.filter(q => q.category === 'cards').length;
+            const integrity = questions.filter(q => q.category === 'integrity').length;
+            const subsidiary = questions.filter(q => q.category === 'subsidiary').length;
+
+            document.getElementById('totalQuestions').textContent = total;
+            document.getElementById('cardQuestions').textContent = cards;
+            document.getElementById('integrityQuestions').textContent = integrity;
+            document.getElementById('subsidiaryQuestions').textContent = subsidiary;
+        }
+
+        function renderQuestions() {
+            const container = document.getElementById('questionsContainer');
+            
+            if (filteredQuestions.length === 0) {
+                container.innerHTML = '<div class="no-questions">Žádné otázky nevyhovují zadaným filtrům.</div>';
+                return;
+            }
+
+            container.innerHTML = filteredQuestions.map(question => `
+                <div class="question-card">
+                    <div class="question-header">
+                        <div class="question-meta">
+                            <span class="tag">${getCategoryName(question.category)}</span>
+                            <span class="difficulty ${question.difficulty}">${getDifficultyName(question.difficulty)}</span>
+                        </div>
+                    </div>
+                    <div class="question-text">${question.question}</div>
+                    <div class="answer-section">
+                        <button class="toggle-answer" onclick="toggleAnswer(${question.id})">
+                            Zobrazit odpověď
+                        </button>
+                        <div class="answer" id="answer-${question.id}">
+                            <strong>Odpověď:</strong><br>
+                            ${question.answer}
+                            <br><br>
+                            <strong>Tagy:</strong> ${question.tags.map(tag => `<span class="tag" style="margin-right: 5px;">${tag}</span>`).join('')}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function getCategoryName(category) {
+            const names = {
+                'cards': 'Platební karty',
+                'integrity': 'Integrita plateb',
+                'subsidiary': 'Dceřiné společnosti'
+            };
+            return names[category] || category;
+        }
+
+        function getDifficultyName(difficulty) {
+            const names = {
+                'easy': 'Snadné',
+                'medium': 'Střední',
+                'hard': 'Těžké'
+            };
+            return names[difficulty] || difficulty;
+        }
+
+        function toggleAnswer(questionId) {
+            const answer = document.getElementById(`answer-${questionId}`);
+            const button = answer.parentElement.querySelector('.toggle-answer');
+            
+            if (answer.classList.contains('show')) {
+                answer.classList.remove('show');
+                button.textContent = 'Zobrazit odpověď';
+            } else {
+                answer.classList.add('show');
+                button.textContent = 'Skrýt odpověď';
+            }
+        }
+
+        function applyFilters() {
+            const categoryFilter = document.getElementById('categoryFilter').value;
+            const difficultyFilter = document.getElementById('difficultyFilter').value;
+            const searchFilter = document.getElementById('searchFilter').value.toLowerCase();
+
+            filteredQuestions = questions.filter(question => {
+                const categoryMatch = categoryFilter === 'all' || question.category === categoryFilter;
+                const difficultyMatch = difficultyFilter === 'all' || question.difficulty === difficultyFilter;
+                const searchMatch = searchFilter === '' || 
+                    question.question.toLowerCase().includes(searchFilter) ||
+                    question.answer.toLowerCase().includes(searchFilter) ||
+                    question.tags.some(tag => tag.toLowerCase().includes(searchFilter));
+
+                return categoryMatch && difficultyMatch && searchMatch;
+            });
+
+            renderQuestions();
+        }
+
+        // Event listeners
+        document.getElementById('categoryFilter').addEventListener('change', applyFilters);
+        document.getElementById('difficultyFilter').addEventListener('change', applyFilters);
+        document.getElementById('searchFilter').addEventListener('input', applyFilters);
+
+        // Initialize
+        renderStats();
+        renderQuestions();
+    </script>
+</body>
+</html>
