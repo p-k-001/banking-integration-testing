@@ -56,9 +56,9 @@ body {
   transition: transform 0.3s ease;
 }
 
-.stat-card:hover {
+/* .stat-card:hover {
   transform: translateY(-5px);
-}
+} */
 
 .stat-number {
   font-size: 2em;
